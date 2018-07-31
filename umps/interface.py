@@ -123,7 +123,7 @@ class Interface:
 
     def _message_callback(self, topic: str, message: bytes):
         if topic not in self._topic_callbacks:
-            self._log.error("received '%s' message with no callbacks", topic)
+            self._log.debug("received '%s' message with no callbacks", topic)
             return
 
         for callback in self._topic_callbacks[topic]:
