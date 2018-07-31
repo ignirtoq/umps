@@ -167,7 +167,7 @@ class SubscribeProtocol(DatagramProtocol):
             self.log.debug('timed out waiting for frames for message %s',
                            hex(uid))
             self._request_missing_frames(source_address, uid, total_frames,
-                                         *self._missing_frames)
+                                         *self._missing_frames[uid])
             when = self.loop.time() + self.timeout
 
         self.loop.call_at(when, self._ensure_message, source_address, uid,
