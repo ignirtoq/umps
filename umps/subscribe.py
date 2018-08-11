@@ -6,7 +6,7 @@ from socket import (INADDR_ANY, IPPROTO_IP, IP_ADD_MEMBERSHIP,
 from struct import Struct
 
 from .exceptions import NotConnectedError
-from .parse.v1 import MESSAGE_DROPPED, Frame, parse, pack_request_message
+from .parse import MESSAGE_DROPPED, Frame, parse, pack_request_message
 
 
 MAX_CACHE_SIZE = 2 ** 10

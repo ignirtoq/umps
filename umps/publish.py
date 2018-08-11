@@ -5,8 +5,8 @@ from typing import Tuple
 from uuid import uuid4
 
 from .exceptions import NotConnectedError
-from .parse.v1 import (FRAME_REQUEST, parse, pack, pack_drop_message,
-                       set_response_frame_type)
+from .parse import (FRAME_REQUEST, parse, pack, pack_drop_message,
+                    set_response_frame_type)
 
 
 async def create_publish_socket(local_addr, loop=None, protocol_version=1):
