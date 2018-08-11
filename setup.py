@@ -16,7 +16,7 @@ version = pattern.search(ver_text).group(1)
 
 ext_suffix = '.pyx' if HAVE_CYTHON else '.c'
 extensions = [
-    Extension("umps._hash", ["umps/_hash"+ext_suffix]),
+    Extension("umps._hash", ["umps/_hash"+ext_suffix], optional=True),
 ]
 if HAVE_CYTHON:
     extensions = cythonize(extensions)
@@ -27,4 +27,5 @@ setup(
     version=version,
     packages=find_packages(),
     ext_modules=extensions,
+    zip_safe=False,
       )
