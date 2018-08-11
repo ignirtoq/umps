@@ -140,3 +140,11 @@ def set_response_frame_type(*frames):
     vt = PROTOCOL_VERSION_UPPER | FRAME_RESPONSE
     for frame in frames:
         frame[VERSION_TYPE_BYTE_POSITION] = vt
+
+
+_parse = parse
+try:
+    from ._parse import Frame
+    parse = Frame.from_bytes
+except ImportError:
+    pass

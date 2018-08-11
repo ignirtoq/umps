@@ -1,3 +1,4 @@
+import os
 import re
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
@@ -7,6 +8,7 @@ try:
 except ImportError:
     HAVE_CYTHON = False
 
+
 name = 'umps'
 description = 'Publish-subscribe protocol based on UDP multicast'
 with open('umps/_version.py') as ver_file:
@@ -14,12 +16,19 @@ with open('umps/_version.py') as ver_file:
 pattern = re.compile(r"^version = ['\"]([^'\"]*)['\"]", re.MULTILINE)
 version = pattern.search(ver_text).group(1)
 
+
+parse_libs = []
+if os.name == 'nt':
+    parse_libs.append('Ws2_32')
 ext_suffix = '.pyx' if HAVE_CYTHON else '.c'
 extensions = [
     Extension("umps._hash", ["umps/_hash"+ext_suffix], optional=True),
+    Extension("umps._parse", ["umps/_parse"+ext_suffix], optional=True,
+              libraries=parse_libs),
 ]
 if HAVE_CYTHON:
     extensions = cythonize(extensions)
+
 
 setup(
     name=name,
