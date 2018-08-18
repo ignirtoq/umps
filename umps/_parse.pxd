@@ -1,20 +1,18 @@
-from cpython.buffer cimport (PyObject_GetBuffer, PyBuffer_Release,
-                             PyBUF_ANY_CONTIGUOUS, PyBUF_SIMPLE)
 from libc.stdint cimport uint8_t, uint16_t, uint32_t, uint64_t
 
 
 IF UNAME_SYSNAME == "Windows":
     cdef extern from "WinSock2.h" nogil:
         int htons (int)
-        int htonl (int)
-        int ntohl (int)
+        long htonl (long)
         int ntohs (int)
+        long ntohl (long)
 ELSE:
     cdef extern from "arpa/inet.h" nogil:
         int htons (int)
-        int htonl (int)
-        int ntohl (int)
+        long htonl (long)
         int ntohs (int)
+        long ntohl (long)
 
 
 cdef union _u64_as_u32_array:
@@ -30,19 +28,36 @@ cdef packed struct frame_header_t:
     uint8_t  total_frames
 
 
-cdef struct topic_t:
+cdef uint8_t TYPE_MASK
+cdef uint8_t VERSION_MASK
+# v1 message types
+cdef uint8_t START_FRAME
+cdef uint8_t CONTINUATION_FRAME
+cdef uint8_t FRAME_REQUEST
+cdef uint8_t FRAME_RESPONSE
+cdef uint8_t MESSAGE_DROPPED
+
+DEF MAX_UDP_SIZE = 512
+cdef uint16_t MAX_UDP_SIZE
+# This should use something safer, like sizeof(), but Cython doesn't support a
+# call to sizeof() in a DEF statement.
+DEF FRAME_HEADER_SIZE = 13
+cdef uint16_t FRAME_HEADER_SIZE
+DEF FRAME_BODY_SIZE = MAX_UDP_SIZE - FRAME_HEADER_SIZE
+cdef uint16_t FRAME_BODY_SIZE
+
+
+cdef packed struct frame_t:
+    frame_header_t hdr
+    uint8_t        body[FRAME_BODY_SIZE]
+
+
+cdef packed struct topic_t:
     uint8_t size
     uint8_t value[256]
 
 
 cdef class Frame:
-    cdef public uint16_t size
-    cdef public uint8_t protocol_version
-    cdef public uint8_t frame_type
-    cdef public uint64_t uid
-    cdef public uint8_t frame_number
-    cdef public uint8_t total_frames
+    cdef frame_header_t _hdr
     cdef public unicode topic
-    cdef public bytes   body
-
-    cdef void from_frame_header_t(Frame self, frame_header_t hdr)
+    cdef public bytes body
