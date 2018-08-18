@@ -143,8 +143,10 @@ def set_response_frame_type(*frames):
 
 
 _parse = parse
+_pack = pack
 try:
-    from ._parse import Frame
-    parse = Frame.from_bytes
+    from ._pack import pack
+    from ._parse import Frame as _Frame
+    parse = _Frame.parse
 except ImportError:
     pass

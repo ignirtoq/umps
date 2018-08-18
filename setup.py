@@ -17,14 +17,18 @@ pattern = re.compile(r"^version = ['\"]([^'\"]*)['\"]", re.MULTILINE)
 version = pattern.search(ver_text).group(1)
 
 
-parse_libs = []
+frame_libs = []
 if os.name == 'nt':
-    parse_libs.append('Ws2_32')
+    frame_libs.append('Ws2_32')
 ext_suffix = '.pyx' if HAVE_CYTHON else '.c'
 extensions = [
     Extension("umps._hash", ["umps/_hash"+ext_suffix], optional=True),
+    Extension("umps._frame", ["umps/_frame"+ext_suffix], optional=True,
+              libraries=frame_libs),
+    Extension("umps._pack", ["umps/_pack"+ext_suffix], optional=True,
+              libraries=frame_libs),
     Extension("umps._parse", ["umps/_parse"+ext_suffix], optional=True,
-              libraries=parse_libs),
+              libraries=frame_libs),
 ]
 if HAVE_CYTHON:
     extensions = cythonize(extensions)

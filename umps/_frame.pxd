@@ -15,6 +15,16 @@ ELSE:
         long ntohl (long)
 
 
+cdef uint8_t TYPE_MASK
+cdef uint8_t VERSION_MASK
+# v1 message types
+cdef uint8_t START_FRAME
+cdef uint8_t CONTINUATION_FRAME
+cdef uint8_t FRAME_REQUEST
+cdef uint8_t FRAME_RESPONSE
+cdef uint8_t MESSAGE_DROPPED
+
+
 cdef union _u64_as_u32_array:
     uint64_t u64
     uint32_t u32[2]
@@ -27,15 +37,6 @@ cdef packed struct frame_header_t:
     uint8_t  frame_number
     uint8_t  total_frames
 
-
-cdef uint8_t TYPE_MASK
-cdef uint8_t VERSION_MASK
-# v1 message types
-cdef uint8_t START_FRAME
-cdef uint8_t CONTINUATION_FRAME
-cdef uint8_t FRAME_REQUEST
-cdef uint8_t FRAME_RESPONSE
-cdef uint8_t MESSAGE_DROPPED
 
 DEF MAX_UDP_SIZE = 512
 cdef uint16_t MAX_UDP_SIZE
@@ -52,12 +53,8 @@ cdef packed struct frame_t:
     uint8_t        body[FRAME_BODY_SIZE]
 
 
-cdef packed struct topic_t:
-    uint8_t size
-    uint8_t value[256]
+cdef uint64_t ntoh_u64(uint64_t net_u64) nogil
+cdef uint64_t hton_u64(uint64_t host_u64) nogil
 
-
-cdef class Frame:
-    cdef frame_header_t _hdr
-    cdef public unicode topic
-    cdef public bytes body
+cdef frame_header_t ntoh_frame_header_t(frame_header_t* data) nogil
+cdef frame_header_t hton_frame_header_t(frame_header_t* data) nogil
