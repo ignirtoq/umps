@@ -7,11 +7,13 @@ from ._frame cimport (START_FRAME, CONTINUATION_FRAME, FRAME_HEADER_SIZE,
                       FRAME_BODY_SIZE, htons, hton_u64, frame_header_t, frame_t)
 
 
-cpdef list pack(uint64_t uid, unicode topic, bytes body):
+cpdef list pack(uint64_t uid, unicode topic, object body):
     cdef Py_buffer bytearray_buf, topic_buf, body_buf
+    cdef bytes body_bytes = (body if isinstance(body, bytes) else
+                             body.encode('utf-8'))
     cdef bytes topic_bytes = topic.encode()
     cdef size_t topic_size = len(topic_bytes)
-    cdef size_t body_size = len(body)
+    cdef size_t body_size = len(body_bytes)
     cdef size_t max_body_size = max_message_size(topic_size)
     cdef uint8_t total_frames = compute_total_frames(topic_size, body_size)
     cdef list ret_list = [None,] * total_frames
@@ -30,7 +32,7 @@ cpdef list pack(uint64_t uid, unicode topic, bytes body):
 
     PyObject_GetBuffer(topic_bytes, &topic_buf,
                        PyBUF_ANY_CONTIGUOUS | PyBUF_SIMPLE)
-    PyObject_GetBuffer(body, &body_buf,
+    PyObject_GetBuffer(body_bytes, &body_buf,
                        PyBUF_ANY_CONTIGUOUS | PyBUF_SIMPLE)
     try:
         # pack the first frame
