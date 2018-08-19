@@ -46,6 +46,7 @@ DEF FRAME_HEADER_SIZE = 13
 cdef uint16_t FRAME_HEADER_SIZE
 DEF FRAME_BODY_SIZE = MAX_UDP_SIZE - FRAME_HEADER_SIZE
 cdef uint16_t FRAME_BODY_SIZE
+cdef uint8_t MAX_TOPIC_SIZE
 
 
 cdef packed struct frame_t:

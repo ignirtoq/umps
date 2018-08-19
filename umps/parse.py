@@ -8,6 +8,7 @@ _header = Struct('!HBQ2B')
 _topic_size = Struct('!B')
 MAX_UDP_SIZE = 512  # bytes
 MAX_BODY_SIZE = MAX_UDP_SIZE - _header.size
+MAX_TOPIC_SIZE = 255
 
 PROTOCOL_VERSION_UPPER = 0x1 << 4
 
@@ -48,12 +49,21 @@ def pack(uid: int, topic: str, body: Union[bytes, str]) -> Tuple[bytearray]:
     if isinstance(body, str):
         body = body.encode('utf-8')
 
+    topic_size = len(topic)
+    if topic_size > MAX_TOPIC_SIZE:
+        raise ValueError('topic length exceeds maximum: '
+                         '%d > %d' % (topic_size, MAX_TOPIC_SIZE))
+
+    body_size = len(body)
+    if body_size > max_message_size(topic_size):
+        raise ValueError('message length exceeds maximum for topic: '
+                         '%d > %d' % (body_size, max_message_size(topic_size)))
+
     # compute the total number of frames we need to multicast the message,
     # keeping each frame under the fragmentation limit for UDP
-    body_size = len(body)
+    num_frames = 1
     # we'll have at least one frame, but the first frame also contains the
     # topic, so it can't hold as much as later frames
-    num_frames = 1
     max_first_frame_size = MAX_BODY_SIZE - _topic_size.size - len(topic)
 
     if body_size <= max_first_frame_size:
@@ -140,6 +150,10 @@ def set_response_frame_type(*frames):
     vt = PROTOCOL_VERSION_UPPER | FRAME_RESPONSE
     for frame in frames:
         frame[VERSION_TYPE_BYTE_POSITION] = vt
+
+
+def max_message_size(topic_size):
+    return 255*MAX_BODY_SIZE - (topic_size + 1)
 
 
 _parse = parse

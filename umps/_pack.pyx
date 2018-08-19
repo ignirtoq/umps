@@ -4,7 +4,8 @@ from libc.string cimport memcpy
 from libc.stdint cimport uint8_t, uint16_t, uint64_t
 
 from ._frame cimport (START_FRAME, CONTINUATION_FRAME, FRAME_HEADER_SIZE,
-                      FRAME_BODY_SIZE, htons, hton_u64, frame_header_t, frame_t)
+                      FRAME_BODY_SIZE, MAX_TOPIC_SIZE, htons, hton_u64,
+                      frame_header_t, frame_t)
 
 
 cpdef list pack(uint64_t uid, unicode topic, object body):
@@ -23,8 +24,9 @@ cpdef list pack(uint64_t uid, unicode topic, object body):
     cdef bytearray py_frame
     cdef int i
 
-    if topic_size > 256:
-        raise ValueError('topic too long')
+    if topic_size > MAX_TOPIC_SIZE:
+        raise ValueError('topic length exceeds maximum: '
+                         '%d > %d' % (<int>topic_size, MAX_TOPIC_SIZE))
 
     if body_size > max_body_size:
         raise ValueError('message length exceeds maximum for topic: '
