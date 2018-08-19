@@ -40,6 +40,8 @@ setup(
     name=name,
     description=description,
     long_description=long_description,
+    long_description_content_type="text/markdown",
+    url='https://github.com/ignirtoq/umps',
     version=version,
     license='MIT',
     classifiers=[
