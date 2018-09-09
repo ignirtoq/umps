@@ -1,5 +1,6 @@
 from asyncio import DatagramProtocol, get_event_loop
 from collections import OrderedDict
+from functools import partial
 from logging import getLogger
 from typing import Tuple
 from uuid import uuid4
@@ -9,14 +10,11 @@ from .parse import (FRAME_REQUEST, parse, pack, pack_drop_message,
                     set_response_frame_type)
 
 
-async def create_publish_socket(local_addr, loop=None, protocol_version=1):
+async def create_publish_socket(local_addr, loop=None, max_cache_size=None):
     loop = get_event_loop() if loop is None else loop
     log = getLogger(__name__)
     log.debug('creating publish socket')
-    if protocol_version != 1:
-        raise NotImplementedError('protocol versions other than 1 not '
-                                  'supported')
-    factory = lambda: PublishProtocol(loop=loop)
+    factory = partial(PublishProtocol, loop=loop, max_cache_size=max_cache_size)
     transport, protocol = await loop.create_datagram_endpoint(
         factory, local_addr=local_addr, reuse_address=True
     )
@@ -25,12 +23,12 @@ async def create_publish_socket(local_addr, loop=None, protocol_version=1):
 
 
 class PublishProtocol(DatagramProtocol):
-    def __init__(self, loop=None, max_cache_size=20):
+    def __init__(self, loop=None, max_cache_size=None):
         self.loop = get_event_loop() if loop is None else loop
         self.log = getLogger(__name__)
         self.transport = None
         self._message_cache = OrderedDict()
-        self._max_cache_size = max_cache_size
+        self._max_cache_size = 20 if max_cache_size is None else max_cache_size
 
     def connection_made(self, transport):
         self.log.debug('connection made: %s (local) to %s (remote)',

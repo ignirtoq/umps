@@ -10,7 +10,7 @@ def notify(queue: Queue, topic: str, message: bytes):
 
 async def single_subscribe(network: IPv4Network, port: int, topic: str):
     queue = Queue()
-    interface = Interface(network, port)
+    interface = Interface(network, port, timeout=0.1)
     await interface.subscribe(topic, partial(notify, queue))
     while True:
         try:

@@ -17,16 +17,14 @@ def _nth(it, n):
 
 class Interface:
 
-    def __init__(self, network: IPv4Network, port: int,
-                 protocol_version=1, loop=None):
-        if protocol_version != 1:
-            raise NotImplementedError("protocol versions other than 1 not "
-                                      "supported")
-
+    def __init__(self, network: IPv4Network, port: int, timeout=None,
+                 max_cache_size=None, loop=None):
         self._loop = get_event_loop() if loop is None else loop
         self._log = getLogger(__name__)
         self._net = network
         self._port = port
+        self._timeout = timeout
+        self._max_cache_size = max_cache_size
         self._nbins = self._calculate_nbins()
         self._startup_tasks = set()
         self._subscriptions = defaultdict(set)
@@ -133,7 +131,8 @@ class Interface:
         local_address = ('0.0.0.0', 0)
         try:
             self._publish_protocol = await create_publish_socket(
-                local_address, loop=self._loop)
+                local_address, loop=self._loop,
+                max_cache_size=self._max_cache_size)
         except CancelledError:
             pass
 
@@ -143,7 +142,7 @@ class Interface:
         local_address = ('0.0.0.0', self._port)
         try:
             self._subscribe_protocol = await create_subscribe_socket(
-                local_address, loop=self._loop,
+                local_address, loop=self._loop, timeout=self._timeout,
                 message_callback=self._message_callback)
         except CancelledError:
             pass

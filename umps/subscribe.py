@@ -1,5 +1,6 @@
 from asyncio import DatagramProtocol, get_event_loop
 from collections import OrderedDict
+from functools import partial
 from logging import getLogger
 from socket import (INADDR_ANY, IPPROTO_IP, IP_ADD_MEMBERSHIP,
                     IP_DROP_MEMBERSHIP, inet_aton)
@@ -12,16 +13,13 @@ from .parse import MESSAGE_DROPPED, Frame, parse, pack_request_message
 MAX_CACHE_SIZE = 2 ** 10
 
 
-async def create_subscribe_socket(local_addr, loop=None, message_callback=None,
-                                  protocol_version=1):
+async def create_subscribe_socket(local_addr, loop=None, timeout=None,
+                                  message_callback=None):
     loop = get_event_loop() if loop is None else loop
     log = getLogger(__name__)
     log.debug('creating subscribe socket')
-    if protocol_version != 1:
-        raise NotImplementedError('protocol versions other than 1 not '
-                                  'supported')
-    factory = lambda: SubscribeProtocol(loop=loop,
-                                        message_callback=message_callback)
+    factory = partial(SubscribeProtocol, loop=loop, timeout=timeout,
+                      message_callback=message_callback)
     transport, protocol = await loop.create_datagram_endpoint(
         factory, local_addr=local_addr, reuse_address=True
     )
@@ -32,12 +30,12 @@ async def create_subscribe_socket(local_addr, loop=None, message_callback=None,
 class SubscribeProtocol(DatagramProtocol):
     _igmp_struct = Struct('!4sL')
 
-    def __init__(self, loop=None, timeout=3, message_callback=None):
+    def __init__(self, loop=None, timeout=None, message_callback=None):
         self.loop = get_event_loop() if loop is None else loop
         self.log = getLogger(__name__)
         self.transport = None
         self.socket = None
-        self.timeout = timeout
+        self.timeout = 3 if timeout is None else timeout
         self.message_cb = message_callback
         # structures for consolidating multi-frame messages
         self._incomplete_messages = dict()
