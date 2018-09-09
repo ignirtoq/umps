@@ -24,7 +24,7 @@ class Interface:
                                       "supported")
 
         self._loop = get_event_loop() if loop is None else loop
-        self._log = getLogger()
+        self._log = getLogger(__name__)
         self._net = network
         self._port = port
         self._nbins = self._calculate_nbins()
