@@ -42,6 +42,8 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url='https://github.com/ignirtoq/umps',
+    author='Jeffrey Bouas',
+    author_email='ignirtoq+umps@gmail.com',
     version=version,
     license='MIT',
     classifiers=[
