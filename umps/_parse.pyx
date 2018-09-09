@@ -30,7 +30,7 @@ cdef topic_t get_topic_from_frame(uint8_t* data) nogil:
 
 
 cdef bytes get_bytes_from_topic_t(topic_t topic):
-    cdef bytes out = topic.value
+    cdef bytes out = topic.value[:topic.size]
     return out
 
 
