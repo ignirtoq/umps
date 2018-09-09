@@ -3,7 +3,7 @@ from cpython.buffer cimport (PyObject_GetBuffer, PyBuffer_Release,
 from libc.string cimport memcpy
 from libc.stdint cimport uint16_t, uint64_t
 
-from ._frame cimport (TYPE_MASK, VERSION_MASK, START_FRAME,
+from ._frame cimport (TYPE_MASK, VERSION_MASK, START_FRAME, FRAME_RESPONSE,
                       FRAME_HEADER_SIZE,
                       htons, ntohs, ntoh_u64, hton_u64,
                       frame_header_t)
@@ -49,6 +49,7 @@ cdef class Frame:
         cdef size_t body_start
         cdef size_t buf_len = len(frame_bytes)
         cdef Frame frame = Frame()
+        cdef uint8_t frame_type
 
         if buf_len < sizeof(frame_header_t):
             raise ValueError('data buffer smaller than header size: '
@@ -61,7 +62,10 @@ cdef class Frame:
             with nogil:
                 memcpy(&frame._hdr, frame_buf, FRAME_HEADER_SIZE)
                 topic.size = 0
-                if (frame._hdr.vt & TYPE_MASK) == START_FRAME:
+                frame_type = frame._hdr.vt & TYPE_MASK
+                if frame._hdr.frame_number == 0 and (
+                        frame_type == START_FRAME or
+                        frame_type == FRAME_RESPONSE):
                     topic = get_topic_from_frame(frame_buf)
         finally:
             PyBuffer_Release(&bytes_buf)
@@ -69,6 +73,7 @@ cdef class Frame:
         if topic.size:
             topic_bytes = get_bytes_from_topic_t(topic)
         else:
+            topic.size = 0
             topic_bytes = b''
         frame.topic = topic_bytes.decode('utf8')
 

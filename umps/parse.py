@@ -31,7 +31,8 @@ def parse(frame_bytes: Union[bytes, bytearray]) -> Frame:
     protocol_version = vt >> 4
     frame_type = TYPE_MASK & vt
     body_start = _header.size
-    if frame_type == START_FRAME:
+    if frame == 0 and (frame_type == START_FRAME or
+                       frame_type == FRAME_RESPONSE):
         topic_size, = _topic_size.unpack_from(frame_bytes, _header.size)
         topic_bytes = unpack_from('!%ds' % topic_size, frame_bytes,
                                   _header.size + _topic_size.size)[0]
