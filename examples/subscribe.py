@@ -1,4 +1,4 @@
-from asyncio import Queue, get_event_loop
+from asyncio import CancelledError, Queue, get_event_loop
 from functools import partial
 from ipaddress import IPv4Network
 from umps import Interface
@@ -12,8 +12,13 @@ async def single_subscribe(network: IPv4Network, port: int, topic: str):
     queue = Queue()
     interface = Interface(network, port)
     await interface.subscribe(topic, partial(notify, queue))
-    topic, message = await queue.get()
-    print(f"Received '{topic}' message: {message!r}")
+    while True:
+        try:
+            topic, message = await queue.get()
+        except CancelledError:
+            break
+        else:
+            print(f"Received '{topic}' message: {message!r}")
     await interface.terminate()
 
 
@@ -31,4 +36,10 @@ if __name__ == '__main__':
     network = IPv4Network(args.network)
 
     loop = get_event_loop()
-    loop.run_until_complete(single_subscribe(network, args.port, args.topic))
+    future = loop.create_task(single_subscribe(network, args.port, args.topic))
+    try:
+        loop.run_until_complete(future)
+    except KeyboardInterrupt:
+        future.cancel()
+        loop.run_until_complete(future)
+    loop.close()
