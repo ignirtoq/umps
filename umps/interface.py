@@ -18,13 +18,14 @@ def _nth(it, n):
 class Interface:
 
     def __init__(self, network: IPv4Network, port: int, timeout=None,
-                 max_cache_size=None, loop=None):
+                 max_cache_size=None, time_to_live=None, loop=None):
         self._loop = get_event_loop() if loop is None else loop
         self._log = getLogger(__name__)
         self._net = network
         self._port = port
         self._timeout = timeout
         self._max_cache_size = max_cache_size
+        self._ttl = time_to_live
         self._nbins = self._calculate_nbins()
         self._startup_tasks = set()
         self._subscriptions = defaultdict(set)
@@ -132,7 +133,8 @@ class Interface:
         try:
             self._publish_protocol = await create_publish_socket(
                 local_address, loop=self._loop,
-                max_cache_size=self._max_cache_size)
+                max_cache_size=self._max_cache_size,
+                time_to_live=self._ttl)
         except CancelledError:
             pass
 
